@@ -53,7 +53,36 @@ ReserveTerminalStep
 ScheduleDeliveryStep
 ```
 
-Cada etapa executa sua regra, altera o status da solicitação quando necessário e o workflow persiste o estado antes de avançar.
+Cada etapa executa sua regra de negócio, altera o status da solicitação quando necessário e o workflow persiste o estado antes de avançar.
+
+---
+
+## Retomada e reprocessamento do workflow
+
+O workflow identifica dinamicamente qual etapa deve ser executada com base no status atual da solicitação.
+
+Isso permite que solicitações sejam retomadas a partir do último estado persistido, evitando a reexecução de etapas já concluídas.
+
+### Mapeamento dos steps
+
+| Status atual | Step executado |
+|---|---|
+| `SOLICITADO` | `ValidateCustomerStep` |
+| `VALIDADO` | `ReserveTerminalStep` |
+| `RESERVADO` | `ScheduleDeliveryStep` |
+| `AGENDADO` | Nenhum |
+| `REJEITADO` | Nenhum |
+| `ERRO_RESERVA` | Nenhum |
+| `ERRO_AGENDAMENTO` | Nenhum |
+
+### Regras de execução
+
+- Apenas o step compatível com o status atual será executado.
+- Steps já concluídos são ignorados.
+- Após a execução de um step, a solicitação é persistida.
+- O próximo step será executado somente quando o resultado for `CONTINUE`.
+- Caso o resultado seja `STOP`, o workflow é encerrado.
+- Caso nenhum step suporte o status atual, nenhuma ação será executada.
 
 ---
 
@@ -131,13 +160,15 @@ SELECT * FROM terminal_requests;
 
 ## Collection Postman
 
-Importe o arquivo:
+O projeto disponibiliza uma collection do Postman na raiz do repositório:
 
 ```text
 Terminal Request Case.postman_collection.json
 ```
 
 A collection possui os cenários de teste do case técnico.
+
+A collection também demonstra os comportamentos de retomada do workflow baseados no status persistido da solicitação, permitindo validar cenários de reprocessamento após falhas técnicas simuladas.
 
 Variáveis utilizadas:
 
@@ -339,15 +370,33 @@ Quando `terminalType` recebe um valor fora da enumeração, a API retorna `400 B
 
 ## Cenários da collection
 
+A collection também evidencia o comportamento do workflow orientado a estado.
+
+Quando uma solicitação é reprocessada, apenas o step compatível com o status atual será executado, evitando a reexecução de etapas já concluídas.
+
+Exemplos:
+
+```text
+SOLICITADO -> inicia em ValidateCustomerStep
+VALIDADO   -> inicia em ReserveTerminalStep
+RESERVADO  -> inicia em ScheduleDeliveryStep
+
+AGENDADO
+REJEITADO
+ERRO_RESERVA
+ERRO_AGENDAMENTO
+        -> nenhum step é executado
+```
+
 | Request | Resultado final esperado | Descrição |
 |---|---:|---|
 | `01 - AGENDADO` | `AGENDADO` | Cliente válido, terminal disponível e logística disponível. |
-| `02 - SOLICITADO - (Cliente Falha na Integração com Serviço)` | `SOLICITADO` | Falha técnica ao consultar o serviço de clientes. |
+| `02 - SOLICITADO - (Cliente Falha na Integração com Serviço)` | `SOLICITADO` | Falha técnica na validação do cliente. O workflow poderá ser retomado a partir de `SOLICITADO`. |
 | `03 - REJEITADO (Cliente Inativo)` | `REJEITADO` | Cliente encontrado, porém inativo. |
 | `04 - REJEITADO (Cliente Não Encontrado)` | `REJEITADO` | Cliente inexistente. |
-| `05 - VALIDADO - (Reserva Falha na Integração com Serviço)` | `VALIDADO` | Cliente validado, mas ocorre falha técnica na reserva. |
+| `05 - VALIDADO - (Reserva Falha na Integração com Serviço)` | `VALIDADO` | Falha técnica na reserva. O workflow poderá ser retomado a partir de `VALIDADO`. |
 | `06 - ERRO_RESERVA (Reserva Não Encontrada)` | `ERRO_RESERVA` | Cliente válido, mas não há terminal disponível. |
-| `07 - RESERVADO - (Agendamento Falha na Integração com Serviço)` | `RESERVADO` | Cliente validado e terminal reservado, mas ocorre falha técnica na logística. |
+| `07 - RESERVADO - (Agendamento Falha na Integração com Serviço)` | `RESERVADO` | Falha técnica no agendamento. O workflow poderá ser retomado a partir de `RESERVADO`. |
 | `08- ERRO_AGENDAMENTO` | `ERRO_AGENDAMENTO` | Cliente validado e terminal reservado, mas a logística retorna falha de negócio. |
 | `09 - Consultar Solicitação` | `200 OK` | Consulta uma solicitação existente usando `terminalRequestId`. |
 | `10 - Solicitação Não Encontrada` | `404 Not Found` | Consulta uma solicitação inexistente. |
@@ -882,13 +931,34 @@ Falha técnica na logística -> RESERVADO
 
 Essa distinção demonstra que a aplicação diferencia erro esperado de negócio e falha técnica de integração.
 
+Após a resolução da falha técnica, a solicitação pode ser reprocessada normalmente.
+
+O workflow retomará automaticamente a execução a partir do último estado persistido, sem repetir etapas já concluídas.
+
+Exemplos de retomada:
+
+```text
+SOLICITADO -> executa ValidateCustomerStep
+VALIDADO   -> ignora validação e executa ReserveTerminalStep
+RESERVADO  -> ignora validação e reserva e executa ScheduleDeliveryStep
+```
+
+Solicitações com status finais não são reprocessadas:
+
+```text
+AGENDADO
+REJEITADO
+ERRO_RESERVA
+ERRO_AGENDAMENTO
+```
+
+
 ---
 
 ## Melhorias futuras
 
-- Retry para integrações externas
-- Mensageria com RabbitMQ ou Kafka
-- Banco relacional persistente
+- Retry/Circuit breaker para integrações externas
+- Usar implementações reais (Mensageria com RabbitMQ ou Kafka/Banco relacional persistente)
 - Observabilidade com métricas e tracing
-- Circuit breaker para integrações externas
-- Testes de integração automatizados para os fluxos assíncronos
+- Fluxo de Reprocessamento em casos de Falha de Integração
+- Implementar validação de Transição da Máquina de estado

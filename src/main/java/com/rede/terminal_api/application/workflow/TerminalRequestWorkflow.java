@@ -6,30 +6,32 @@ import com.rede.terminal_api.domain.model.TerminalRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component
 @RequiredArgsConstructor
 public class TerminalRequestWorkflow {
 
     private final SaveTerminalRequestGateway saveGateway;
-    private final ValidateCustomerStep validateCustomerStep;
+    private final ValidateCustomerStep firstStep;
 
     public void execute(TerminalRequest terminalRequest) {
-        executeStep(validateCustomerStep, terminalRequest);
+        executeStep(firstStep, terminalRequest);
     }
 
-    private void executeStep(
-            TerminalRequestStep step,
-            TerminalRequest terminalRequest
-    ) {
-        var result = step.process(terminalRequest);
-        saveGateway.execute(terminalRequest);
-        executeNexStep(step, terminalRequest, result);
+    private void executeStep(TerminalRequestStep requestStep, TerminalRequest request) {
+        Optional.ofNullable(requestStep).ifPresent(step -> {
+            WorkflowResult result = WorkflowResult.CONTINUE;
+
+            if (step.supports(request.getStatus())) {
+                result = step.process(request);
+                saveGateway.execute(request);
+            }
+
+            if (result.shouldContinue()) {
+                executeStep(step.nextStep().orElse(null), request);
+            }
+        });
     }
 
-    private void executeNexStep(TerminalRequestStep step, TerminalRequest terminalRequest, WorkflowResult result) {
-        if (result.shouldContinue()) {
-            step.nextStep()
-                    .ifPresent(next -> executeStep(next, terminalRequest));
-        }
-    }
 }
