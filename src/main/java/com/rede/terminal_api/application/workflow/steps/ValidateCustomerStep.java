@@ -5,6 +5,7 @@ import com.rede.terminal_api.application.workflow.WorkflowResult;
 import com.rede.terminal_api.domain.gateway.GetCustomerInfoGateway;
 import com.rede.terminal_api.domain.model.Customer;
 import com.rede.terminal_api.domain.model.TerminalRequest;
+import com.rede.terminal_api.domain.model.TerminalRequestStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,11 @@ public class ValidateCustomerStep implements TerminalRequestStep {
 
     private final GetCustomerInfoGateway getCustomerInfoGateway;
     private final ReserveTerminalStep reserveTerminalStep;
+
+    @Override
+    public boolean supports(TerminalRequestStatus status) {
+        return status == TerminalRequestStatus.SOLICITADO;
+    }
 
     @Override
     public WorkflowResult process(TerminalRequest terminalRequest) {

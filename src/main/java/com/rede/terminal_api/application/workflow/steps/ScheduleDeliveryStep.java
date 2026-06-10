@@ -5,6 +5,7 @@ import com.rede.terminal_api.application.workflow.TerminalRequestStep;
 import com.rede.terminal_api.application.workflow.WorkflowResult;
 import com.rede.terminal_api.domain.gateway.ScheduleLogisticsGateway;
 import com.rede.terminal_api.domain.model.TerminalRequest;
+import com.rede.terminal_api.domain.model.TerminalRequestStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +16,11 @@ import java.util.Optional;
 public class ScheduleDeliveryStep implements TerminalRequestStep {
 
     private final ScheduleLogisticsGateway scheduleLogisticsGateway;
+
+    @Override
+    public boolean supports(TerminalRequestStatus status) {
+        return status == TerminalRequestStatus.RESERVADO;
+    }
 
     @Override
     public WorkflowResult process(TerminalRequest terminalRequest) {
