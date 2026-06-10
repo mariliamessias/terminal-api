@@ -236,6 +236,78 @@ GET /terminal-requests/{id}
 
 ---
 
+## Validações de payload e parâmetros
+
+O endpoint de criação valida os campos obrigatórios antes de criar a solicitação.
+
+### Campos obrigatórios
+
+| Campo | Regra | Exemplo inválido |
+|---|---|---|
+| `customerId` | Obrigatório e não pode ser vazio | `""` |
+| `terminalType` | Obrigatório e não pode ser vazio | `""` |
+| `address` | Obrigatório | `null` |
+| `address.street` | Obrigatório e não pode ser vazio | `""` |
+| `address.number` | Obrigatório e não pode ser vazio | `""` |
+| `address.city` | Obrigatório e não pode ser vazio | `""` |
+| `address.state` | Obrigatório e não pode ser vazio | `""` |
+| `address.zipCode` | Obrigatório e não pode ser vazio | `""` |
+
+### Tipos de terminal aceitos
+
+```text
+POS_WIFI
+POS_CHIP
+POS_SMART
+```
+
+Quando `terminalType` recebe um valor fora da enumeração, a API retorna `400 Bad Request`.
+
+### Response para payload inválido
+
+```http
+400 Bad Request
+```
+
+```json
+{
+  "code": "INVALID_REQUEST",
+  "message": "customerId is required",
+  "timestamp": "2026-06-10T10:20:00.000000"
+}
+```
+
+### Response para `terminalType` inválido
+
+```http
+400 Bad Request
+```
+
+```json
+{
+  "code": "INVALID_REQUEST",
+  "message": "No enum constant com.rede.terminal_api.domain.model.TerminalType.POS_INVALID",
+  "timestamp": "2026-06-10T10:20:00.000000"
+}
+```
+
+### Response para ID inválido na consulta
+
+```http
+400 Bad Request
+```
+
+```json
+{
+  "code": "INVALID_REQUEST",
+  "message": "Invalid request parameter: id",
+  "timestamp": "2026-06-10T10:20:00.000000"
+}
+```
+
+
+---
+
 ## Regras simuladas nas integrações HTTP
 
 ### Customer Service
@@ -279,6 +351,11 @@ GET /terminal-requests/{id}
 | `08- ERRO_AGENDAMENTO` | `ERRO_AGENDAMENTO` | Cliente validado e terminal reservado, mas a logística retorna falha de negócio. |
 | `09 - Consultar Solicitação` | `200 OK` | Consulta uma solicitação existente usando `terminalRequestId`. |
 | `10 - Solicitação Não Encontrada` | `404 Not Found` | Consulta uma solicitação inexistente. |
+| `11 - Validação - Payload Inválido` | `400 Bad Request` | Envia campos obrigatórios vazios. |
+| `12 - Validação - TerminalType Inválido` | `400 Bad Request` | Envia um tipo de terminal fora da enumeração. |
+| `13 - Validação - TerminalType Em Branco` | `400 Bad Request` | Envia `terminalType` vazio. |
+| `14 - Validação - Address Nulo` | `400 Bad Request` | Envia `address` como `null`. |
+| `15 - Validação - ID Inválido` | `400 Bad Request` | Consulta usando um ID que não é UUID válido. |
 
 ---
 
@@ -623,6 +700,163 @@ Resposta esperada:
   "timestamp": "2026-06-09T17:25:55.304014"
 }
 ```
+
+---
+
+### 11 - Validação - Payload Inválido
+
+Campos obrigatórios vazios devem retornar `400 Bad Request`.
+
+```bash
+curl -X POST http://localhost:8080/terminal-requests \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": "",
+    "terminalType": "POS_WIFI",
+    "address": {
+      "street": "",
+      "number": "100",
+      "city": "São Paulo",
+      "state": "SP",
+      "zipCode": "01000-000"
+    }
+  }'
+```
+
+Resposta esperada:
+
+```http
+400 Bad Request
+```
+
+```json
+{
+  "code": "INVALID_REQUEST",
+  "message": "customerId is required",
+  "timestamp": "2026-06-10T10:20:00.000000"
+}
+```
+
+---
+
+### 12 - Validação - TerminalType Inválido
+
+O campo `terminalType` deve ser um dos valores aceitos pela API.
+
+```bash
+curl -X POST http://localhost:8080/terminal-requests \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": "CUST-VALID",
+    "terminalType": "POS_INVALID",
+    "address": {
+      "street": "Rua Exemplo",
+      "number": "100",
+      "city": "São Paulo",
+      "state": "SP",
+      "zipCode": "01000-000"
+    }
+  }'
+```
+
+Resposta esperada:
+
+```http
+400 Bad Request
+```
+
+```json
+{
+  "code": "INVALID_REQUEST",
+  "message": "No enum constant com.rede.terminal_api.domain.model.TerminalType.POS_INVALID",
+  "timestamp": "2026-06-10T10:20:00.000000"
+}
+```
+
+---
+
+### 13 - Validação - TerminalType Em Branco
+
+```bash
+curl -X POST http://localhost:8080/terminal-requests \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": "CUST-VALID",
+    "terminalType": "",
+    "address": {
+      "street": "Rua Exemplo",
+      "number": "100",
+      "city": "São Paulo",
+      "state": "SP",
+      "zipCode": "01000-000"
+    }
+  }'
+```
+
+Resposta esperada:
+
+```http
+400 Bad Request
+```
+
+```json
+{
+  "code": "INVALID_REQUEST",
+  "message": "terminalType is required",
+  "timestamp": "2026-06-10T10:20:00.000000"
+}
+```
+
+---
+
+### 14 - Validação - Address Nulo
+
+```bash
+curl -X POST http://localhost:8080/terminal-requests \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": "CUST-VALID",
+    "terminalType": "POS_WIFI",
+    "address": null
+  }'
+```
+
+Resposta esperada:
+
+```http
+400 Bad Request
+```
+
+```json
+{
+  "code": "INVALID_REQUEST",
+  "message": "address is required",
+  "timestamp": "2026-06-10T10:20:00.000000"
+}
+```
+
+---
+
+### 15 - Validação - ID Inválido
+
+```bash
+curl -X GET http://localhost:8080/terminal-requests/invalid-id
+```
+
+Resposta esperada:
+
+```http
+400 Bad Request
+```
+
+```json
+{
+  "code": "INVALID_REQUEST",
+  "message": "Invalid request parameter: id",
+  "timestamp": "2026-06-10T10:20:00.000000"
+}
+```
+
 
 ---
 
