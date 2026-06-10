@@ -438,29 +438,33 @@ Resposta inicial esperada:
 
 ```json
 {
-  "id": "UUID_GERADO",
+  "id": "4d98994b-f3eb-49d9-92e0-979c6e77481f",
   "customerId": "CUST-VALID",
   "terminalType": "POS_WIFI",
   "status": "SOLICITADO",
-  "createdAt": "2026-06-09T16:59:47.947104"
+  "createdAt": "2026-06-10T12:13:10.442162"
 }
 ```
 
 Após consultar por ID:
 
 ```bash
-curl -X GET http://localhost:8080/terminal-requests/UUID_GERADO
+curl -X GET http://localhost:8080/terminal-requests/4d98994b-f3eb-49d9-92e0-979c6e77481f
 ```
 
 Resposta final esperada:
 
+```http
+200 OK
+```
+
 ```json
 {
-  "id": "UUID_GERADO",
+  "id": "4d98994b-f3eb-49d9-92e0-979c6e77481f",
   "customerId": "CUST-VALID",
   "terminalType": "POS_WIFI",
   "status": "AGENDADO",
-  "createdAt": "2026-06-09T17:22:23.164666"
+  "createdAt": "2026-06-10T12:13:10.442162"
 }
 ```
 
@@ -486,15 +490,41 @@ curl -X POST http://localhost:8080/terminal-requests \
   }'
 ```
 
-Resposta final esperada após consultar por ID:
+Resposta inicial esperada:
+
+```http
+201 Created
+```
 
 ```json
 {
-  "id": "UUID_GERADO",
+  "id": "42c8b508-2f06-49df-8e90-f2253e8dd55b",
   "customerId": "CUST-INTEGRATION-FAIL",
   "terminalType": "POS_WIFI",
   "status": "SOLICITADO",
-  "createdAt": "2026-06-09T16:59:47.947104"
+  "createdAt": "2026-06-10T12:18:01.174692"
+}
+```
+
+Após consultar por ID:
+
+```bash
+curl -X GET http://localhost:8080/terminal-requests/42c8b508-2f06-49df-8e90-f2253e8dd55b
+```
+
+Resposta final esperada:
+
+```http
+200 OK
+```
+
+```json
+{
+  "id": "42c8b508-2f06-49df-8e90-f2253e8dd55b",
+  "customerId": "CUST-INTEGRATION-FAIL",
+  "terminalType": "POS_WIFI",
+  "status": "SOLICITADO",
+  "createdAt": "2026-06-10T12:18:01.174692"
 }
 ```
 
@@ -520,15 +550,41 @@ curl -X POST http://localhost:8080/terminal-requests \
   }'
 ```
 
-Resposta final esperada após consultar por ID:
+Resposta inicial esperada:
+
+```http
+201 Created
+```
 
 ```json
 {
-  "id": "UUID_GERADO",
+  "id": "f011e811-4543-462c-af71-1cae0fd32f7e",
+  "customerId": "CUST-INACTIVE",
+  "terminalType": "POS_WIFI",
+  "status": "SOLICITADO",
+  "createdAt": "2026-06-10T12:20:44.743422"
+}
+```
+
+Após consultar por ID:
+
+```bash
+curl -X GET http://localhost:8080/terminal-requests/f011e811-4543-462c-af71-1cae0fd32f7e
+```
+
+Resposta final esperada:
+
+```http
+200 OK
+```
+
+```json
+{
+  "id": "f011e811-4543-462c-af71-1cae0fd32f7e",
   "customerId": "CUST-INACTIVE",
   "terminalType": "POS_WIFI",
   "status": "REJEITADO",
-  "createdAt": "2026-06-09T16:59:47.947104"
+  "createdAt": "2026-06-10T12:20:44.743422"
 }
 ```
 
@@ -554,15 +610,41 @@ curl -X POST http://localhost:8080/terminal-requests \
   }'
 ```
 
-Resposta final esperada após consultar por ID:
+Resposta inicial esperada:
+
+```http
+201 Created
+```
 
 ```json
 {
-  "id": "UUID_GERADO",
+  "id": "a9ae24d9-6076-4eb1-a9f9-d1d01c2ba518",
+  "customerId": "CUST-NOT-FOUND",
+  "terminalType": "POS_WIFI",
+  "status": "SOLICITADO",
+  "createdAt": "2026-06-10T12:22:08.297606"
+}
+```
+
+Após consultar por ID:
+
+```bash
+curl -X GET http://localhost:8080/terminal-requests/a9ae24d9-6076-4eb1-a9f9-d1d01c2ba518
+```
+
+Resposta final esperada:
+
+```http
+200 OK
+```
+
+```json
+{
+  "id": "a9ae24d9-6076-4eb1-a9f9-d1d01c2ba518",
   "customerId": "CUST-NOT-FOUND",
   "terminalType": "POS_WIFI",
   "status": "REJEITADO",
-  "createdAt": "2026-06-09T16:59:47.947104"
+  "createdAt": "2026-06-10T12:22:08.297606"
 }
 ```
 
@@ -588,15 +670,41 @@ curl -X POST http://localhost:8080/terminal-requests \
   }'
 ```
 
-Resposta final esperada após consultar por ID:
+Resposta inicial esperada:
+
+```http
+201 Created
+```
 
 ```json
 {
-  "id": "UUID_GERADO",
+  "id": "1b7285ac-276f-45c8-ba3f-8f945e873a30",
+  "customerId": "CUST-VALID",
+  "terminalType": "POS_CHIP",
+  "status": "SOLICITADO",
+  "createdAt": "2026-06-10T12:23:36.219863"
+}
+```
+
+Após consultar por ID:
+
+```bash
+curl -X GET http://localhost:8080/terminal-requests/1b7285ac-276f-45c8-ba3f-8f945e873a30
+```
+
+Resposta final esperada:
+
+```http
+200 OK
+```
+
+```json
+{
+  "id": "1b7285ac-276f-45c8-ba3f-8f945e873a30",
   "customerId": "CUST-VALID",
   "terminalType": "POS_CHIP",
   "status": "VALIDADO",
-  "createdAt": "2026-06-09T16:59:47.947104"
+  "createdAt": "2026-06-10T12:23:36.219863"
 }
 ```
 
@@ -622,15 +730,41 @@ curl -X POST http://localhost:8080/terminal-requests \
   }'
 ```
 
-Resposta final esperada após consultar por ID:
+Resposta inicial esperada:
+
+```http
+201 Created
+```
 
 ```json
 {
-  "id": "UUID_GERADO",
+  "id": "62a0a554-8825-4b21-b333-4bb30f749c9e",
+  "customerId": "CUST-VALID",
+  "terminalType": "POS_SMART",
+  "status": "SOLICITADO",
+  "createdAt": "2026-06-10T12:24:55.333124"
+}
+```
+
+Após consultar por ID:
+
+```bash
+curl -X GET http://localhost:8080/terminal-requests/62a0a554-8825-4b21-b333-4bb30f749c9e
+```
+
+Resposta final esperada:
+
+```http
+200 OK
+```
+
+```json
+{
+  "id": "62a0a554-8825-4b21-b333-4bb30f749c9e",
   "customerId": "CUST-VALID",
   "terminalType": "POS_SMART",
   "status": "ERRO_RESERVA",
-  "createdAt": "2026-06-09T16:59:47.947104"
+  "createdAt": "2026-06-10T12:24:55.333124"
 }
 ```
 
@@ -656,15 +790,41 @@ curl -X POST http://localhost:8080/terminal-requests \
   }'
 ```
 
-Resposta final esperada após consultar por ID:
+Resposta inicial esperada:
+
+```http
+201 Created
+```
 
 ```json
 {
-  "id": "UUID_GERADO",
+  "id": "6e6c31a8-b0b3-47ef-af88-363794c282ed",
+  "customerId": "CUST-VALID",
+  "terminalType": "POS_WIFI",
+  "status": "SOLICITADO",
+  "createdAt": "2026-06-10T12:26:03.385242"
+}
+```
+
+Após consultar por ID:
+
+```bash
+curl -X GET http://localhost:8080/terminal-requests/6e6c31a8-b0b3-47ef-af88-363794c282ed
+```
+
+Resposta final esperada:
+
+```http
+200 OK
+```
+
+```json
+{
+  "id": "6e6c31a8-b0b3-47ef-af88-363794c282ed",
   "customerId": "CUST-VALID",
   "terminalType": "POS_WIFI",
   "status": "RESERVADO",
-  "createdAt": "2026-06-09T16:59:47.947104"
+  "createdAt": "2026-06-10T12:26:03.385242"
 }
 ```
 
@@ -690,15 +850,41 @@ curl -X POST http://localhost:8080/terminal-requests \
   }'
 ```
 
-Resposta final esperada após consultar por ID:
+Resposta inicial esperada:
+
+```http
+201 Created
+```
 
 ```json
 {
-  "id": "UUID_GERADO",
+  "id": "e925e7a3-451d-4a90-b399-8801970173ad",
+  "customerId": "CUST-VALID",
+  "terminalType": "POS_WIFI",
+  "status": "SOLICITADO",
+  "createdAt": "2026-06-10T12:27:23.878218"
+}
+```
+
+Após consultar por ID:
+
+```bash
+curl -X GET http://localhost:8080/terminal-requests/e925e7a3-451d-4a90-b399-8801970173ad
+```
+
+Resposta final esperada:
+
+```http
+200 OK
+```
+
+```json
+{
+  "id": "e925e7a3-451d-4a90-b399-8801970173ad",
   "customerId": "CUST-VALID",
   "terminalType": "POS_WIFI",
   "status": "ERRO_AGENDAMENTO",
-  "createdAt": "2026-06-09T16:59:47.947104"
+  "createdAt": "2026-06-10T12:27:23.878218"
 }
 ```
 
@@ -706,10 +892,10 @@ Resposta final esperada após consultar por ID:
 
 ### 09 - Consultar Solicitação
 
-Use o ID retornado por qualquer cenário `POST`.
+Use o ID retornado no cenário `01 - AGENDADO`.
 
 ```bash
-curl -X GET http://localhost:8080/terminal-requests/UUID_GERADO
+curl -X GET http://localhost:8080/terminal-requests/4d98994b-f3eb-49d9-92e0-979c6e77481f
 ```
 
 Resposta esperada:
@@ -720,11 +906,11 @@ Resposta esperada:
 
 ```json
 {
-  "id": "UUID_GERADO",
+  "id": "4d98994b-f3eb-49d9-92e0-979c6e77481f",
   "customerId": "CUST-VALID",
   "terminalType": "POS_WIFI",
   "status": "AGENDADO",
-  "createdAt": "2026-06-09T17:22:23.164666"
+  "createdAt": "2026-06-10T12:13:10.442162"
 }
 ```
 
@@ -746,7 +932,7 @@ Resposta esperada:
 {
   "code": "TERMINAL_REQUEST_NOT_FOUND",
   "message": "Terminal request not found: 9552d10a-e05a-4fa6-996d-8de7baf84bfa",
-  "timestamp": "2026-06-09T17:25:55.304014"
+  "timestamp": "2026-06-10T12:29:26.237262"
 }
 ```
 
@@ -782,7 +968,7 @@ Resposta esperada:
 {
   "code": "INVALID_REQUEST",
   "message": "customerId is required",
-  "timestamp": "2026-06-10T10:20:00.000000"
+  "timestamp": "2026-06-10T12:30:07.060197"
 }
 ```
 
@@ -818,7 +1004,7 @@ Resposta esperada:
 {
   "code": "INVALID_REQUEST",
   "message": "No enum constant com.rede.terminal_api.domain.model.TerminalType.POS_INVALID",
-  "timestamp": "2026-06-10T10:20:00.000000"
+  "timestamp": "2026-06-10T12:30:46.900203"
 }
 ```
 
@@ -852,7 +1038,7 @@ Resposta esperada:
 {
   "code": "INVALID_REQUEST",
   "message": "terminalType is required",
-  "timestamp": "2026-06-10T10:20:00.000000"
+  "timestamp": "2026-06-10T12:31:23.638706"
 }
 ```
 
@@ -880,7 +1066,7 @@ Resposta esperada:
 {
   "code": "INVALID_REQUEST",
   "message": "address is required",
-  "timestamp": "2026-06-10T10:20:00.000000"
+  "timestamp": "2026-06-10T12:31:53.070927"
 }
 ```
 
@@ -902,10 +1088,36 @@ Resposta esperada:
 {
   "code": "INVALID_REQUEST",
   "message": "Invalid request parameter: id",
-  "timestamp": "2026-06-10T10:20:00.000000"
+  "timestamp": "2026-06-10T12:32:23.140152"
 }
 ```
 
+
+
+
+## Evidências de Persistência (H2)
+
+Após a execução dos cenários da collection do Postman, foi realizada consulta diretamente no console H2 utilizando:
+
+```sql
+SELECT *
+FROM terminal_requests;
+```
+
+A evidência demonstra que as solicitações foram persistidas corretamente, incluindo seus respectivos status finais processados pelo workflow assíncrono.
+
+| Customer ID | Terminal Type | Status Persistido | Cenário |
+|---|---|---|---|
+| `CUST-VALID` | `POS_WIFI` | `AGENDADO` | 01 - Fluxo completo com sucesso |
+| `CUST-INTEGRATION-FAIL` | `POS_WIFI` | `SOLICITADO` | 02 - Falha técnica na validação do cliente |
+| `CUST-INACTIVE` | `POS_WIFI` | `REJEITADO` | 03 - Cliente inativo |
+| `CUST-NOT-FOUND` | `POS_WIFI` | `REJEITADO` | 04 - Cliente inexistente |
+| `CUST-VALID` | `POS_CHIP` | `VALIDADO` | 05 - Falha técnica na reserva |
+| `CUST-VALID` | `POS_SMART` | `ERRO_RESERVA` | 06 - Terminal indisponível |
+| `CUST-VALID` | `POS_WIFI` | `RESERVADO` | 07 - Falha técnica na logística |
+| `CUST-VALID` | `POS_WIFI` | `ERRO_AGENDAMENTO` | 08 - Falha de negócio na logística |
+
+![Evidência H2](docs/images/h2-console-evidence.png)
 
 ---
 
@@ -955,10 +1167,30 @@ ERRO_AGENDAMENTO
 
 ---
 
+## Evidências dos testes automatizados
+
+Os testes automatizados foram executados com sucesso através do comando:
+
+```bash
+./gradlew test
+```
+
+Resultado obtido:
+
+```text
+BUILD SUCCESSFUL in 5s
+4 actionable tasks: 2 executed, 2 up-to-date
+```
+
+![Evidência dos testes automatizados](docs/images/tests-success.png)
+
+Todos os testes unitários relacionados ao workflow e às validações de transição de estado foram executados com sucesso.
+
+
+
 ## Melhorias futuras
 
 - Retry/Circuit breaker para integrações externas
 - Usar implementações reais (Mensageria com RabbitMQ ou Kafka/Banco relacional persistente)
 - Observabilidade com métricas e tracing
 - Fluxo de Reprocessamento em casos de Falha de Integração
-- Implementar validação de Transição da Máquina de estado
