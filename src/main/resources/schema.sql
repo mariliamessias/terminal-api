@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS terminal_requests;
+
 CREATE TABLE terminal_requests (
    id UUID PRIMARY KEY,
    customer_id VARCHAR(100) NOT NULL,
