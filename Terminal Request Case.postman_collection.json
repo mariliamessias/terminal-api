@@ -1,0 +1,393 @@
+{
+  "info": {
+    "_postman_id": "aa7f1a04-d85e-4d04-9e18-9b2e59498dcd",
+    "name": "Terminal Request Case",
+    "description": "Cenários completos do case técnico, incluindo fluxos de negócio, falhas técnicas e validações de payload/parâmetros.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "47368386",
+    "_collection_link": "https://go.postman.co/collection/47368386-aa7f1a04-d85e-4d04-9e18-9b2e59498dcd?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "01 - AGENDADO",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"CUST-VALID\",\n  \"terminalType\": \"POS_WIFI\",\n  \"address\": {\n    \"street\": \"Rua Exemplo\",\n    \"number\": \"100\",\n    \"city\": \"São Paulo\",\n    \"state\": \"SP\",\n    \"zipCode\": \"01000-000\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/terminal-requests",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "terminal-requests"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "02 - SOLICITADO - (Cliente Falha na Integração com Serviço)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"CUST-INTEGRATION-FAIL\",\n  \"terminalType\": \"POS_WIFI\",\n  \"address\": {\n    \"street\": \"Rua Exemplo\",\n    \"number\": \"100\",\n    \"city\": \"São Paulo\",\n    \"state\": \"SP\",\n    \"zipCode\": \"01000-000\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/terminal-requests",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "terminal-requests"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "03 - REJEITADO (Cliente Inativo)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"CUST-INACTIVE\",\n  \"terminalType\": \"POS_WIFI\",\n  \"address\": {\n    \"street\": \"Rua Exemplo\",\n    \"number\": \"100\",\n    \"city\": \"São Paulo\",\n    \"state\": \"SP\",\n    \"zipCode\": \"01000-000\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/terminal-requests",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "terminal-requests"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "04 - REJEITADO (Cliente Não Encontrado)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"CUST-NOT-FOUND\",\n  \"terminalType\": \"POS_WIFI\",\n  \"address\": {\n    \"street\": \"Rua Exemplo\",\n    \"number\": \"100\",\n    \"city\": \"São Paulo\",\n    \"state\": \"SP\",\n    \"zipCode\": \"01000-000\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/terminal-requests",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "terminal-requests"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "05 - VALIDADO - (Reserva Falha na Integração com Serviço)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"CUST-VALID\",\n  \"terminalType\": \"POS_CHIP\",\n  \"address\": {\n    \"street\": \"Rua Exemplo\",\n    \"number\": \"100\",\n    \"city\": \"São Paulo\",\n    \"state\": \"SP\",\n    \"zipCode\": \"01000-000\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/terminal-requests",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "terminal-requests"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "06 - ERRO_RESERVA (Reserva Não Encontrada)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"CUST-VALID\",\n  \"terminalType\": \"POS_SMART\",\n  \"address\": {\n    \"street\": \"Rua Exemplo\",\n    \"number\": \"100\",\n    \"city\": \"São Paulo\",\n    \"state\": \"SP\",\n    \"zipCode\": \"01000-000\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/terminal-requests",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "terminal-requests"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "07 - RESERVADO - (Agendamento Falha na Integração com Serviço)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"CUST-VALID\",\n  \"terminalType\": \"POS_WIFI\",\n  \"address\": {\n    \"street\": \"Rua Exemplo\",\n    \"number\": \"100\",\n    \"city\": \"Boa Vista\",\n    \"state\": \"RR\",\n    \"zipCode\": \"69300-000\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/terminal-requests",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "terminal-requests"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "08- ERRO_AGENDAMENTO",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"CUST-VALID\",\n  \"terminalType\": \"POS_WIFI\",\n  \"address\": {\n    \"street\": \"Rua Exemplo\",\n    \"number\": \"100\",\n    \"city\": \"Manaus\",\n    \"state\": \"AM\",\n    \"zipCode\": \"69000-000\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/terminal-requests",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "terminal-requests"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "09 - Consultar Solicitação",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/terminal-requests/{{terminalRequestId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "terminal-requests",
+            "{{terminalRequestId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "10 - Solicitação Não Encontrada",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/terminal-requests/9552d10a-e05a-4fa6-996d-8de7baf84bfa",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "terminal-requests",
+            "9552d10a-e05a-4fa6-996d-8de7baf84bfa"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "11 - Validação - Payload Inválido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Retorna 400 quando campos obrigatórios são enviados vazios.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"\",\n  \"terminalType\": \"POS_WIFI\",\n  \"address\": {\n    \"street\": \"\",\n    \"number\": \"100\",\n    \"city\": \"São Paulo\",\n    \"state\": \"SP\",\n    \"zipCode\": \"01000-000\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/terminal-requests",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "terminal-requests"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "12 - Validação - TerminalType Inválido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Retorna 400 quando terminalType não existe na enumeração.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"CUST-VALID\",\n  \"terminalType\": \"POS_INVALID\",\n  \"address\": {\n    \"street\": \"Rua Exemplo\",\n    \"number\": \"100\",\n    \"city\": \"São Paulo\",\n    \"state\": \"SP\",\n    \"zipCode\": \"01000-000\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/terminal-requests",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "terminal-requests"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "13 - Validação - TerminalType Em Branco",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Retorna 400 quando terminalType está em branco.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"CUST-VALID\",\n  \"terminalType\": \"\",\n  \"address\": {\n    \"street\": \"Rua Exemplo\",\n    \"number\": \"100\",\n    \"city\": \"São Paulo\",\n    \"state\": \"SP\",\n    \"zipCode\": \"01000-000\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/terminal-requests",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "terminal-requests"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "14 - Validação - Address Nulo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Retorna 400 quando address é null.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"CUST-VALID\",\n  \"terminalType\": \"POS_WIFI\",\n  \"address\": null\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/terminal-requests",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "terminal-requests"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "15 - Validação - ID Inválido",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "description": "Retorna 400 quando o path parameter id não é um UUID válido.",
+        "url": {
+          "raw": "{{baseUrl}}/terminal-requests/invalid-id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "terminal-requests",
+            "invalid-id"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "terminalRequestId",
+      "value": ""
+    }
+  ]
+}
