@@ -1,6 +1,7 @@
 package com.rede.terminal_api.infraestructure.repository;
 
-import com.rede.terminal_api.infrastructure.repository.GetTerminalRequestRepository;
+import com.rede.terminal_api.infrastructure.repository.GetTerminalRequestByIdRepository;
+import com.rede.terminal_api.infrastructure.repository.TerminalRequestErrorJpaRepository;
 import com.rede.terminal_api.infrastructure.repository.SaveTerminalRequestRepository;
 import com.rede.terminal_api.infrastructure.repository.TerminalRequestJpaRepository;
 import com.rede.terminal_api.infrastructure.repository.entity.TerminalRequestEntity;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import static com.rede.terminal_api.domain.model.TerminalRequestStatus.SOLICITADO;
 import static com.rede.terminal_api.domain.model.TerminalType.POS_WIFI;
@@ -21,13 +23,17 @@ class TerminalRequestRepositoryIntegrationTest {
     private SaveTerminalRequestRepository saveTerminalRequestRepository;
 
     @Autowired
-    private GetTerminalRequestRepository getTerminalRequestRepository;
+    private GetTerminalRequestByIdRepository getTerminalRequestByIdRepository;
 
     @Autowired
     private TerminalRequestJpaRepository terminalRequestJpaRepository;
 
+    @Autowired
+    private TerminalRequestErrorJpaRepository terminalRequestErrorJpaRepository;
+
     @BeforeEach
     void setUp() {
+        terminalRequestErrorJpaRepository.deleteAll();
         terminalRequestJpaRepository.deleteAll();
     }
 
@@ -65,7 +71,7 @@ class TerminalRequestRepositoryIntegrationTest {
         );
 
         // when
-        var result = getTerminalRequestRepository.execute(terminalRequest.getId());
+        var result = getTerminalRequestByIdRepository.execute(terminalRequest.getId());
 
         // then
         assertTrue(result.isPresent());
@@ -82,9 +88,29 @@ class TerminalRequestRepositoryIntegrationTest {
         var terminalRequest = buildTerminalRequest("CUST-VALID", POS_WIFI, "SP");
 
         // when
-        var result = getTerminalRequestRepository.execute(terminalRequest.getId());
+        var result = getTerminalRequestByIdRepository.execute(terminalRequest.getId());
 
         // then
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void shouldThrowOptimisticLockingWhenUpdatingSameTerminalRequestConcurrently() {
+        var created = saveTerminalRequestRepository.execute(
+                buildTerminalRequest("CUST-VALID", POS_WIFI, "SP", "external-key-1")
+        );
+
+        var firstLoaded = getTerminalRequestByIdRepository.execute(created.getId()).orElseThrow();
+        var secondLoaded = getTerminalRequestByIdRepository.execute(created.getId()).orElseThrow();
+
+        firstLoaded.validateCustomer();
+        saveTerminalRequestRepository.execute(firstLoaded);
+
+        secondLoaded.validateCustomer();
+
+        assertThrows(
+                ObjectOptimisticLockingFailureException.class,
+                () -> saveTerminalRequestRepository.execute(secondLoaded)
+        );
     }
 }

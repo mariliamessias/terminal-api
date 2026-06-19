@@ -23,8 +23,11 @@ public class TerminalRequestController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CreateTerminalRequestResponse create(@Valid @RequestBody CreateTerminalRequest request) {
-        var result = createTerminalRequestUseCase.execute(request.toDomain());
+    public CreateTerminalRequestResponse create(
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
+            @Valid @RequestBody CreateTerminalRequest request
+    ) {
+        var result = createTerminalRequestUseCase.execute(request.toDomain(idempotencyKey));
         return CreateTerminalRequestResponse.from(result);
     }
 

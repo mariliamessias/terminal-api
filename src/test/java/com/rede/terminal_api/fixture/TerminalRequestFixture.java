@@ -12,13 +12,23 @@ public class TerminalRequestFixture {
     public static TerminalRequest buildTerminalRequest(
             String customerId,
             TerminalType terminalType,
-            String state
+            String state,
+            String externalKey
     ) {
         return TerminalRequest.create(
                 customerId,
                 terminalType,
-                buildAddress(state)
+                buildAddress(state),
+                externalKey
         );
+    }
+
+    public static TerminalRequest buildTerminalRequest(
+            String customerId,
+            TerminalType terminalType,
+            String state
+    ) {
+        return buildTerminalRequest(customerId, terminalType, state, null);
     }
 
     public static Address buildAddress(String state) {

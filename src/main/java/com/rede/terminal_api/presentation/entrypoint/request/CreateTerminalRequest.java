@@ -19,11 +19,12 @@ public record CreateTerminalRequest(
         AddressRequest address
 ) {
 
-    public TerminalRequest toDomain() {
+    public TerminalRequest toDomain(String externalKey) {
         return TerminalRequest.create(
                 customerId,
                 TerminalType.valueOf(terminalType),
-                address.toDomain()
+                address.toDomain(),
+                externalKey
         );
     }
 }

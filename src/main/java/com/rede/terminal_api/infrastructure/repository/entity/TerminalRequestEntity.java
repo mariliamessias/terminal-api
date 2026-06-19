@@ -14,7 +14,10 @@ import java.util.UUID;
 
 @Getter
 @Entity
-@Table(name = "terminal_requests")
+@Table(
+        name = "terminal_requests",
+        uniqueConstraints = @UniqueConstraint(name = "uk_terminal_requests_external_key", columnNames = "external_key")
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TerminalRequestEntity {
 
@@ -32,6 +35,9 @@ public class TerminalRequestEntity {
     private String state;
     private String zipCode;
 
+    @Column(name = "external_key")
+    private String externalKey;
+
     @Enumerated(EnumType.STRING)
     private TerminalRequestStatus status;
 
@@ -39,6 +45,9 @@ public class TerminalRequestEntity {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    @Version
+    private Long version;
 
     public TerminalRequestEntity(
             UUID id,
@@ -49,9 +58,11 @@ public class TerminalRequestEntity {
             String city,
             String state,
             String zipCode,
+            String externalKey,
             TerminalRequestStatus status,
             LocalDateTime createdAt,
-            LocalDateTime updatedAt
+            LocalDateTime updatedAt,
+            Long version
     ) {
         this.id = id;
         this.customerId = customerId;
@@ -61,9 +72,11 @@ public class TerminalRequestEntity {
         this.city = city;
         this.state = state;
         this.zipCode = zipCode;
+        this.externalKey = externalKey;
         this.status = status;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.version = version;
     }
 
     public static TerminalRequestEntity from(TerminalRequest request) {
@@ -78,9 +91,11 @@ public class TerminalRequestEntity {
                 address.city(),
                 address.state(),
                 address.zipCode(),
+                request.getExternalKey(),
                 request.getStatus(),
                 request.getCreatedAt(),
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                request.getVersion()
         );
     }
 
@@ -97,7 +112,9 @@ public class TerminalRequestEntity {
                         zipCode
                 ),
                 createdAt,
-                status
+                status,
+                externalKey,
+                version
         );
     }
 }

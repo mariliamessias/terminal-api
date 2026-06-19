@@ -1188,9 +1188,74 @@ Todos os testes unitários relacionados ao workflow e às validações de transi
 
 
 
-## Melhorias futuras
+## V2 - Evoluções implementadas
 
-- Retry/Circuit breaker para integrações externas
-- Usar implementações reais (Mensageria com RabbitMQ ou Kafka/Banco relacional persistente)
-- Observabilidade com métricas e tracing
-- Fluxo de Reprocessamento em casos de Falha de Integração
+Esta versão adiciona alguns ajustes de robustez no fluxo síncrono e no processamento assíncrono, mantendo a arquitetura em camadas do projeto.
+
+### Idempotência no endpoint de criação
+
+O endpoint `POST /terminal-requests` passou a exigir o header `Idempotency-Key`.
+
+Na borda HTTP, essa chave continua com o nome do protocolo (`Idempotency-Key`), mas internamente ela é traduzida para `externalKey`. Com isso:
+
+- o controller faz a tradução do contrato HTTP para a linguagem interna;
+- o domínio e a aplicação não ficam acoplados ao nome do header;
+- retries da mesma criação podem reaproveitar a mesma solicitação já persistida.
+
+Quando uma solicitação com a mesma `externalKey` já existe, o fluxo retorna a `TerminalRequest` já criada, em vez de criar um novo registro.
+
+### externalKey como atributo interno do agregado
+
+A chave externa passou a fazer parte do próprio agregado `TerminalRequest` e também da persistência em `terminal_requests`.
+
+Isso torna a idempotência uma característica do recurso persistido, e não apenas um detalhe do controller ou da camada de infraestrutura.
+
+### Concorrência com optimistic locking
+
+A entidade JPA possui um campo anotado com `@Version`, usado para optimistic locking.
+
+Além da anotação, a versão agora percorre o ciclo completo entre domínio e persistência:
+
+- a versão lida da entidade JPA é restaurada no agregado;
+- ao persistir novamente o agregado, essa mesma versão é enviada de volta para a entidade;
+- o JPA consegue detectar se outro processamento já atualizou a mesma linha antes do save atual.
+
+Na prática, isso protege o projeto contra sobrescrita silenciosa em cenários de concorrência.
+
+### Processamento assíncrono
+
+O listener assíncrono continua usando eventos internos do Spring com `@Async` e `@EventListener`.
+
+Neste momento, o `eventId` é mantido apenas para rastreabilidade e correlação de logs. A proteção principal do fluxo assíncrono está em:
+
+- workflow reentrante por `status`;
+- descarte natural de etapas não suportadas pelo status atual;
+- optimistic locking para concorrência.
+
+Quando a solicitação não é encontrada no fluxo assíncrono, o processamento não propaga exceção para o listener. O caso é apenas registrado em log e descartado.
+
+### Falhas técnicas e reprocessamento
+
+As falhas técnicas de integração passaram a ser separadas do status de negócio da `TerminalRequest`.
+
+Para isso, foi criada uma estrutura própria de erro técnico em `terminal_request_errors`, vinculada à request por foreign key. Essa tabela armazena o estado corrente da falha técnica, sem alterar o `status` funcional da solicitação.
+
+O objetivo dessa separação é:
+
+- não misturar erro técnico com estado de negócio;
+- preservar a informação necessária para reprocessamento futuro;
+- permitir evolução posterior para scheduler/reprocessador sem depender do evento interno em memória.
+
+Atualmente, quando ocorre `IntegrationUnavailableException` no processamento assíncrono:
+
+- o erro é salvo ou atualizado na tabela de erros;
+- o contador de tentativas é incrementado;
+- a solicitação principal permanece com seu último estado consistente.
+
+O fluxo atual não limpa automaticamente o erro em caso de sucesso posterior. Essa responsabilidade foi deixada para o futuro orquestrador de reprocessamento, que poderá decidir quando a pendência foi realmente resolvida.
+
+### Contrato público da API
+
+Os campos `externalKey` e `version` permanecem internos e não são expostos nos response objects.
+
+Isso mantém a API focada no contrato funcional para o cliente, sem vazar detalhes internos de idempotência e controle de concorrência.

@@ -2,7 +2,7 @@ package com.rede.terminal_api.application.usecase;
 
 import com.rede.terminal_api.application.usecase.impl.GetTerminalRequestUseCaseImpl;
 import com.rede.terminal_api.domain.exception.TerminalRequestNotFoundException;
-import com.rede.terminal_api.domain.gateway.GetTerminalRequestGateway;
+import com.rede.terminal_api.domain.gateway.GetTerminalRequestByIdGateway;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 class GetTerminalRequestUseCaseImplTest {
 
     @Mock
-    private GetTerminalRequestGateway gateway;
+    private GetTerminalRequestByIdGateway gateway;
 
     @InjectMocks
     private GetTerminalRequestUseCaseImpl useCase;

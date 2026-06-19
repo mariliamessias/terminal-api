@@ -16,12 +16,16 @@ public class TerminalRequest {
     private final Address address;
     private final LocalDateTime createdAt;
     private TerminalRequestStatus status;
+    private final String externalKey;
+    private final Long version;
 
     private TerminalRequest(
             UUID id,
             String customerId,
             TerminalType terminalType,
-            Address address
+            Address address,
+            String externalKey,
+            Long version
     ) {
         this.id = id;
         this.customerId = customerId;
@@ -29,6 +33,8 @@ public class TerminalRequest {
         this.address = address;
         this.status = SOLICITADO;
         this.createdAt = LocalDateTime.now();
+        this.externalKey = externalKey;
+        this.version = version;
     }
 
     private TerminalRequest(
@@ -37,7 +43,9 @@ public class TerminalRequest {
             TerminalType terminalType,
             Address address,
             LocalDateTime createdAt,
-            TerminalRequestStatus status
+            TerminalRequestStatus status,
+            String externalKey,
+            Long version
     ) {
         this.id = id;
         this.customerId = customerId;
@@ -45,18 +53,23 @@ public class TerminalRequest {
         this.address = address;
         this.createdAt = createdAt;
         this.status = status;
+        this.externalKey = externalKey;
+        this.version = version;
     }
 
     public static TerminalRequest create(
             String customerId,
             TerminalType terminalType,
-            Address address
+            Address address,
+            String externalKey
     ) {
         return new TerminalRequest(
                 UUID.randomUUID(),
                 customerId,
                 terminalType,
-                address
+                address,
+                externalKey,
+                null
         );
     }
 
@@ -66,7 +79,9 @@ public class TerminalRequest {
             TerminalType terminalType,
             Address address,
             LocalDateTime createdAt,
-            TerminalRequestStatus status
+            TerminalRequestStatus status,
+            String externalKey,
+            Long version
     ) {
         return new TerminalRequest(
                 id,
@@ -74,7 +89,9 @@ public class TerminalRequest {
                 terminalType,
                 address,
                 createdAt,
-                status
+                status,
+                externalKey,
+                version
         );
     }
 
