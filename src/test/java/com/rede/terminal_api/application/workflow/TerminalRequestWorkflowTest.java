@@ -1,6 +1,7 @@
 package com.rede.terminal_api.application.workflow;
 
 import com.rede.terminal_api.application.workflow.steps.ValidateCustomerStep;
+import com.rede.terminal_api.domain.exception.IntegrationUnavailableException;
 import com.rede.terminal_api.domain.gateway.SaveTerminalRequestGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import java.util.Optional;
 import static com.rede.terminal_api.domain.model.TerminalRequestStatus.*;
 import static com.rede.terminal_api.domain.model.TerminalType.POS_WIFI;
 import static com.rede.terminal_api.fixture.TerminalRequestFixture.buildTerminalRequest;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -231,5 +233,27 @@ class TerminalRequestWorkflowTest {
         verify(scheduleDeliveryStep, never()).nextStep();
 
         verify(saveGateway, never()).execute(request);
+    }
+
+    @Test
+    void shouldPropagateIntegrationUnavailableExceptionAndStopWorkflow() {
+        var request = buildTerminalRequest("CUST-VALID", POS_WIFI, "SP");
+
+        when(validateCustomerStep.supports(SOLICITADO)).thenReturn(true);
+        when(validateCustomerStep.process(request))
+                .thenThrow(new IntegrationUnavailableException("Customer service unavailable"));
+
+        var exception = assertThrows(
+                IntegrationUnavailableException.class,
+                () -> workflow.execute(request)
+        );
+
+        org.assertj.core.api.Assertions.assertThat(exception.getMessage())
+                .isEqualTo("Customer service unavailable");
+
+        verify(validateCustomerStep).process(request);
+        verify(saveGateway, never()).execute(any());
+        verify(validateCustomerStep, never()).nextStep();
+        verifyNoInteractions(reserveTerminalStep, scheduleDeliveryStep);
     }
 }
