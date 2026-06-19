@@ -2,13 +2,14 @@ package com.rede.terminal_api.application.workflow;
 
 import com.rede.terminal_api.application.workflow.steps.ValidateCustomerStep;
 import com.rede.terminal_api.domain.gateway.SaveTerminalRequestGateway;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static com.rede.terminal_api.domain.model.TerminalRequestStatus.*;
@@ -31,8 +32,19 @@ class TerminalRequestWorkflowTest {
     @Mock
     private TerminalRequestStep scheduleDeliveryStep;
 
-    @InjectMocks
     private TerminalRequestWorkflow workflow;
+
+    @BeforeEach
+    void setUp() {
+        workflow = new TerminalRequestWorkflow(
+                saveGateway,
+                List.of(
+                        validateCustomerStep,
+                        reserveTerminalStep,
+                        scheduleDeliveryStep
+                )
+        );
+    }
 
     @Test
     void shouldExecuteFirstStepAndSaveWhenStepStopsWorkflow() {
@@ -135,74 +147,92 @@ class TerminalRequestWorkflowTest {
     }
 
     @Test
-    void shouldSkipValidateCustomerAndExecuteReserveWhenStatusIsValidado() {
-        var request = buildTerminalRequest("CUST-VALID", POS_WIFI, "SP");
-        request.validateCustomer();
+    void shouldSkipValidateAndReserveAndExecuteScheduleWhenStatusIsReservado() {
+        var request = buildTerminalRequest(
+                "CUST-VALID",
+                POS_WIFI,
+                "SP"
+        );
+        request.reserveTerminal();
 
-        // given
-        when(validateCustomerStep.supports(VALIDADO)).thenReturn(false);
-        when(validateCustomerStep.nextStep()).thenReturn(Optional.of(reserveTerminalStep));
+        when(validateCustomerStep.supports(RESERVADO))
+                .thenReturn(false);
+        when(reserveTerminalStep.supports(RESERVADO))
+                .thenReturn(false);
+        when(scheduleDeliveryStep.supports(RESERVADO))
+                .thenReturn(true);
+        when(scheduleDeliveryStep.process(request))
+                .thenReturn(WorkflowResult.STOP);
 
-        when(reserveTerminalStep.supports(VALIDADO)).thenReturn(true);
-        when(reserveTerminalStep.process(request)).thenReturn(WorkflowResult.STOP);
-
-        // when
         workflow.execute(request);
 
-        // then
         verify(validateCustomerStep, never()).process(request);
+        verify(validateCustomerStep, never()).nextStep();
+
+        verify(reserveTerminalStep, never()).process(request);
+        verify(reserveTerminalStep, never()).nextStep();
+
+        verify(scheduleDeliveryStep).process(request);
+        verify(scheduleDeliveryStep, never()).nextStep();
+
+        verify(saveGateway).execute(request);
+    }
+
+    @Test
+    void shouldSkipValidateCustomerAndExecuteReserveWhenStatusIsValidado() {
+        var request = buildTerminalRequest(
+                "CUST-VALID",
+                POS_WIFI,
+                "SP"
+        );
+        request.validateCustomer();
+
+        when(validateCustomerStep.supports(VALIDADO))
+                .thenReturn(false);
+        when(reserveTerminalStep.supports(VALIDADO))
+                .thenReturn(true);
+        when(reserveTerminalStep.process(request))
+                .thenReturn(WorkflowResult.STOP);
+
+        workflow.execute(request);
+
+        verify(validateCustomerStep, never()).process(request);
+        verify(validateCustomerStep, never()).nextStep();
+
         verify(reserveTerminalStep).process(request);
+        verify(reserveTerminalStep, never()).nextStep();
+
         verify(saveGateway).execute(request);
         verifyNoInteractions(scheduleDeliveryStep);
     }
 
     @Test
-    void shouldSkipValidateAndReserveAndExecuteScheduleWhenStatusIsReservado() {
-        var request = buildTerminalRequest("CUST-VALID", POS_WIFI, "SP");
-        request.reserveTerminal();
-
-        // given
-        when(validateCustomerStep.supports(RESERVADO)).thenReturn(false);
-        when(validateCustomerStep.nextStep()).thenReturn(Optional.of(reserveTerminalStep));
-
-        when(reserveTerminalStep.supports(RESERVADO)).thenReturn(false);
-        when(reserveTerminalStep.nextStep()).thenReturn(Optional.of(scheduleDeliveryStep));
-
-        when(scheduleDeliveryStep.supports(RESERVADO)).thenReturn(true);
-        when(scheduleDeliveryStep.process(request)).thenReturn(WorkflowResult.STOP);
-
-        // when
-        workflow.execute(request);
-
-        // then
-        verify(validateCustomerStep, never()).process(request);
-        verify(reserveTerminalStep, never()).process(request);
-        verify(scheduleDeliveryStep).process(request);
-        verify(saveGateway).execute(request);
-    }
-
-    @Test
     void shouldNotExecuteAnyStepWhenStatusIsFinal() {
-        var request = buildTerminalRequest("CUST-VALID", POS_WIFI, "SP");
+        var request = buildTerminalRequest(
+                "CUST-VALID",
+                POS_WIFI,
+                "SP"
+        );
         request.scheduleDelivery();
 
-        // given
-        when(validateCustomerStep.supports(AGENDADO)).thenReturn(false);
-        when(validateCustomerStep.nextStep()).thenReturn(Optional.of(reserveTerminalStep));
+        when(validateCustomerStep.supports(AGENDADO))
+                .thenReturn(false);
+        when(reserveTerminalStep.supports(AGENDADO))
+                .thenReturn(false);
+        when(scheduleDeliveryStep.supports(AGENDADO))
+                .thenReturn(false);
 
-        when(reserveTerminalStep.supports(AGENDADO)).thenReturn(false);
-        when(reserveTerminalStep.nextStep()).thenReturn(Optional.of(scheduleDeliveryStep));
-
-        when(scheduleDeliveryStep.supports(AGENDADO)).thenReturn(false);
-        when(scheduleDeliveryStep.nextStep()).thenReturn(Optional.empty());
-
-        // when
         workflow.execute(request);
 
-        // then
         verify(validateCustomerStep, never()).process(request);
+        verify(validateCustomerStep, never()).nextStep();
+
         verify(reserveTerminalStep, never()).process(request);
+        verify(reserveTerminalStep, never()).nextStep();
+
         verify(scheduleDeliveryStep, never()).process(request);
+        verify(scheduleDeliveryStep, never()).nextStep();
+
         verify(saveGateway, never()).execute(request);
     }
 }
