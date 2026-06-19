@@ -2,8 +2,7 @@ package com.rede.terminal_api.application.usecase;
 
 import com.rede.terminal_api.application.usecase.impl.ProcessTerminalRequestUseCaseImpl;
 import com.rede.terminal_api.application.workflow.TerminalRequestWorkflow;
-import com.rede.terminal_api.domain.exception.TerminalRequestNotFoundException;
-import com.rede.terminal_api.domain.gateway.GetTerminalRequestGateway;
+import com.rede.terminal_api.domain.gateway.GetTerminalRequestByIdGateway;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,14 +14,13 @@ import java.util.UUID;
 
 import static com.rede.terminal_api.domain.model.TerminalType.POS_WIFI;
 import static com.rede.terminal_api.fixture.TerminalRequestFixture.buildTerminalRequest;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessTerminalRequestUseCaseImplTest {
 
     @Mock
-    private GetTerminalRequestGateway getTerminalRequestGateway;
+    private GetTerminalRequestByIdGateway getTerminalRequestByIdGateway;
 
     @Mock
     private TerminalRequestWorkflow terminalRequestWorkflow;
@@ -34,34 +32,32 @@ class ProcessTerminalRequestUseCaseImplTest {
     void shouldProcessTerminalRequestWhenItExists() {
         // given
         var terminalRequest = buildTerminalRequest("CUST-VALID", POS_WIFI, "SP");
+        var eventId = UUID.randomUUID();
 
-        when(getTerminalRequestGateway.execute(terminalRequest.getId()))
+        when(getTerminalRequestByIdGateway.execute(terminalRequest.getId()))
                 .thenReturn(Optional.of(terminalRequest));
 
         // when
-        useCase.execute(terminalRequest.getId());
+        useCase.execute(eventId, terminalRequest.getId());
 
         // then
-        verify(getTerminalRequestGateway).execute(terminalRequest.getId());
+        verify(getTerminalRequestByIdGateway).execute(terminalRequest.getId());
         verify(terminalRequestWorkflow).execute(terminalRequest);
     }
 
     @Test
-    void shouldThrowExceptionWhenTerminalRequestDoesNotExist() {
+    void shouldIgnoreWhenTerminalRequestDoesNotExist() {
         // given
+        var eventId = UUID.randomUUID();
         var terminalRequestId = UUID.randomUUID();
 
-        when(getTerminalRequestGateway.execute(terminalRequestId))
+        when(getTerminalRequestByIdGateway.execute(terminalRequestId))
                 .thenReturn(Optional.empty());
 
-        // when / then
-        assertThrows(
-                TerminalRequestNotFoundException.class,
-                () -> useCase.execute(terminalRequestId)
-        );
+        // when
+        useCase.execute(eventId, terminalRequestId);
 
-        verify(getTerminalRequestGateway).execute(terminalRequestId);
+        verify(getTerminalRequestByIdGateway).execute(terminalRequestId);
         verify(terminalRequestWorkflow, never()).execute(any());
-
     }
 }

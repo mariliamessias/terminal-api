@@ -1188,6 +1188,58 @@ Todos os testes unitários relacionados ao workflow e às validações de transi
 
 
 
+## V2 - Evoluções implementadas
+
+Esta versão adiciona alguns ajustes de robustez no fluxo síncrono e no processamento assíncrono, mantendo a arquitetura em camadas do projeto.
+
+### Idempotência no endpoint de criação
+
+O endpoint `POST /terminal-requests` passou a exigir o header `Idempotency-Key`.
+
+Na borda HTTP, essa chave continua com o nome do protocolo (`Idempotency-Key`), mas internamente ela é traduzida para `externalKey`. Com isso:
+
+- o controller faz a tradução do contrato HTTP para a linguagem interna;
+- o domínio e a aplicação não ficam acoplados ao nome do header;
+- retries da mesma criação podem reaproveitar a mesma solicitação já persistida.
+
+Quando uma solicitação com a mesma `externalKey` já existe, o fluxo retorna a `TerminalRequest` já criada, em vez de criar um novo registro.
+
+### externalKey como atributo interno do agregado
+
+A chave externa passou a fazer parte do próprio agregado `TerminalRequest` e também da persistência em `terminal_requests`.
+
+Isso torna a idempotência uma característica do recurso persistido, e não apenas um detalhe do controller ou da camada de infraestrutura.
+
+### Concorrência com optimistic locking
+
+A entidade JPA possui um campo anotado com `@Version`, usado para optimistic locking.
+
+Além da anotação, a versão agora percorre o ciclo completo entre domínio e persistência:
+
+- a versão lida da entidade JPA é restaurada no agregado;
+- ao persistir novamente o agregado, essa mesma versão é enviada de volta para a entidade;
+- o JPA consegue detectar se outro processamento já atualizou a mesma linha antes do save atual.
+
+Na prática, isso protege o projeto contra sobrescrita silenciosa em cenários de concorrência.
+
+### Processamento assíncrono
+
+O listener assíncrono continua usando eventos internos do Spring com `@Async` e `@EventListener`.
+
+Neste momento, o `eventId` é mantido apenas para rastreabilidade e correlação de logs. A proteção principal do fluxo assíncrono está em:
+
+- workflow reentrante por `status`;
+- descarte natural de etapas não suportadas pelo status atual;
+- optimistic locking para concorrência.
+
+Quando a solicitação não é encontrada no fluxo assíncrono, o processamento não propaga exceção para o listener. O caso é apenas registrado em log e descartado.
+
+### Contrato público da API
+
+Os campos `externalKey` e `version` permanecem internos e não são expostos nos response objects.
+
+Isso mantém a API focada no contrato funcional para o cliente, sem vazar detalhes internos de idempotência e controle de concorrência.
+
 ## Melhorias futuras
 
 - Retry/Circuit breaker para integrações externas

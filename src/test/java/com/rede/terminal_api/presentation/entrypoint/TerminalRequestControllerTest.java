@@ -4,6 +4,7 @@ import com.rede.terminal_api.domain.gateway.SaveTerminalRequestGateway;
 import com.rede.terminal_api.domain.model.TerminalRequest;
 import com.rede.terminal_api.domain.model.TerminalType;
 import com.rede.terminal_api.infrastructure.repository.TerminalRequestJpaRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import java.util.UUID;
 
 import static com.rede.terminal_api.fixture.TerminalRequestFixture.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.reset;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -43,6 +45,11 @@ class TerminalRequestControllerTest {
         terminalRequestJpaRepository.deleteAll();
     }
 
+    @AfterEach
+    void tearDown() {
+        clearInvocations(saveTerminalRequestGateway);
+    }
+
     @Test
     void shouldCreateTerminalRequest() throws Exception {
         // given
@@ -51,6 +58,7 @@ class TerminalRequestControllerTest {
         // when / then
         mockMvc.perform(
                         post("/terminal-requests")
+                                .header("Idempotency-Key", "idem-create-1")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(payload)
                 )
@@ -59,7 +67,9 @@ class TerminalRequestControllerTest {
                 .andExpect(jsonPath("$.customerId").value("CUST-VALID"))
                 .andExpect(jsonPath("$.terminalType").value("POS_WIFI"))
                 .andExpect(jsonPath("$.status").value("SOLICITADO"))
-                .andExpect(jsonPath("$.createdAt").exists());
+                .andExpect(jsonPath("$.createdAt").exists())
+                .andExpect(jsonPath("$.externalKey").doesNotExist())
+                .andExpect(jsonPath("$.version").doesNotExist());
     }
 
     @Test
@@ -72,6 +82,7 @@ class TerminalRequestControllerTest {
         // when / then
         mockMvc.perform(
                         post("/terminal-requests")
+                                .header("Idempotency-Key", "idem-create-error")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(validPayload())
                 )
@@ -97,7 +108,9 @@ class TerminalRequestControllerTest {
                 .andExpect(jsonPath("$.customerId").value("CUST-VALID"))
                 .andExpect(jsonPath("$.terminalType").value("POS_WIFI"))
                 .andExpect(jsonPath("$.status").value("SOLICITADO"))
-                .andExpect(jsonPath("$.createdAt").exists());
+                .andExpect(jsonPath("$.createdAt").exists())
+                .andExpect(jsonPath("$.externalKey").doesNotExist())
+                .andExpect(jsonPath("$.version").doesNotExist());
     }
 
     @Test
@@ -123,6 +136,7 @@ class TerminalRequestControllerTest {
         // when / then
         mockMvc.perform(
                         post("/terminal-requests")
+                                .header("Idempotency-Key", "idem-invalid-payload")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(payload)
                 )
@@ -140,6 +154,7 @@ class TerminalRequestControllerTest {
         // when / then
         mockMvc.perform(
                         post("/terminal-requests")
+                                .header("Idempotency-Key", "idem-invalid-terminal-type")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(payload)
                 )
@@ -157,6 +172,7 @@ class TerminalRequestControllerTest {
         // when / then
         mockMvc.perform(
                         post("/terminal-requests")
+                                .header("Idempotency-Key", "idem-terminal-blank")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(payload)
                 )
@@ -174,6 +190,7 @@ class TerminalRequestControllerTest {
         // when / then
         mockMvc.perform(
                         post("/terminal-requests")
+                                .header("Idempotency-Key", "idem-null-address")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(payload)
                 )
@@ -181,6 +198,47 @@ class TerminalRequestControllerTest {
                 .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
                 .andExpect(jsonPath("$.message").value("address is required"))
                 .andExpect(jsonPath("$.timestamp").exists());
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenIdempotencyKeyHeaderIsMissing() throws Exception {
+        mockMvc.perform(
+                        post("/terminal-requests")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(validPayload())
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message").value("Idempotency-Key header is required"))
+                .andExpect(jsonPath("$.timestamp").exists());
+    }
+
+    @Test
+    void shouldReturnSameTerminalRequestWhenIdempotencyKeyIsRetried() throws Exception {
+        var idempotencyKey = "idem-retry-1";
+
+        var firstResponse = mockMvc.perform(
+                        post("/terminal-requests")
+                                .header("Idempotency-Key", idempotencyKey)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(validPayload())
+                )
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        var secondResponse = mockMvc.perform(
+                        post("/terminal-requests")
+                                .header("Idempotency-Key", idempotencyKey)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(validPayload())
+                )
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andReturn();
+
+        org.assertj.core.api.Assertions.assertThat(terminalRequestJpaRepository.count()).isEqualTo(1);
+        org.assertj.core.api.Assertions.assertThat(secondResponse.getResponse().getContentAsString())
+                .isEqualTo(firstResponse.getResponse().getContentAsString());
     }
 
     @Test

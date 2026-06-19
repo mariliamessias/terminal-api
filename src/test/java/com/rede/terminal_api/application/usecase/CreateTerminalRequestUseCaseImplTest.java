@@ -2,6 +2,7 @@ package com.rede.terminal_api.application.usecase;
 
 import com.rede.terminal_api.application.event.TerminalRequestCreatedEvent;
 import com.rede.terminal_api.application.usecase.impl.CreateTerminalRequestUseCaseImpl;
+import com.rede.terminal_api.domain.gateway.GetTerminalRequestByExternalKeyGateway;
 import com.rede.terminal_api.domain.gateway.SaveTerminalRequestGateway;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,6 +26,9 @@ class CreateTerminalRequestUseCaseImplTest {
     private SaveTerminalRequestGateway saveGateway;
 
     @Mock
+    private GetTerminalRequestByExternalKeyGateway getTerminalRequestByExternalKeyGateway;
+
+    @Mock
     private ApplicationEventPublisher eventPublisher;
 
     @Captor
@@ -36,7 +40,10 @@ class CreateTerminalRequestUseCaseImplTest {
     @Test
     void shouldSaveTerminalRequestAndPublishCreatedEvent() {
         // given
-        var terminalRequest = buildTerminalRequest("CUST-VALID", POS_WIFI, "SP");
+        var terminalRequest = buildTerminalRequest("CUST-VALID", POS_WIFI, "SP", "idem-1");
+
+        when(getTerminalRequestByExternalKeyGateway.execute("idem-1"))
+                .thenReturn(java.util.Optional.empty());
 
         when(saveGateway.execute(terminalRequest))
                 .thenReturn(terminalRequest);
@@ -59,8 +66,11 @@ class CreateTerminalRequestUseCaseImplTest {
     @Test
     void shouldThrowExceptionAndNotPublishEventWhenSaveFails() {
         // given
-        var terminalRequest = buildTerminalRequest("CUST-VALID", POS_WIFI, "SP");
+        var terminalRequest = buildTerminalRequest("CUST-VALID", POS_WIFI, "SP", "idem-2");
         var exception = new RuntimeException("Error saving terminal request");
+
+        when(getTerminalRequestByExternalKeyGateway.execute("idem-2"))
+                .thenReturn(java.util.Optional.empty());
 
         when(saveGateway.execute(terminalRequest))
                 .thenThrow(exception);
@@ -74,6 +84,20 @@ class CreateTerminalRequestUseCaseImplTest {
         assertEquals("Error saving terminal request", result.getMessage());
 
         verify(saveGateway).execute(terminalRequest);
+        verify(eventPublisher, never()).publishEvent(any());
+    }
+
+    @Test
+    void shouldReturnExistingRequestAndNotPublishEventWhenExternalKeyAlreadyExists() {
+        var terminalRequest = buildTerminalRequest("CUST-VALID", POS_WIFI, "SP", "idem-3");
+
+        when(getTerminalRequestByExternalKeyGateway.execute("idem-3"))
+                .thenReturn(java.util.Optional.of(terminalRequest));
+
+        var result = useCase.execute(terminalRequest);
+
+        assertEquals(terminalRequest.getId(), result.getId());
+        verify(saveGateway, never()).execute(any());
         verify(eventPublisher, never()).publishEvent(any());
     }
 }

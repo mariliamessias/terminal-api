@@ -71,7 +71,6 @@ class TerminalRequestWorkflowTest {
         when(validateCustomerStep.process(request)).thenReturn(WorkflowResult.CONTINUE);
         when(validateCustomerStep.nextStep()).thenReturn(Optional.of(reserveTerminalStep));
 
-        when(reserveTerminalStep.supports(any())).thenReturn(true);
         when(reserveTerminalStep.process(request)).thenReturn(WorkflowResult.STOP);
 
         // when
@@ -99,11 +98,9 @@ class TerminalRequestWorkflowTest {
         when(validateCustomerStep.process(request)).thenReturn(WorkflowResult.CONTINUE);
         when(validateCustomerStep.nextStep()).thenReturn(Optional.of(reserveTerminalStep));
 
-        when(reserveTerminalStep.supports(any())).thenReturn(true);
         when(reserveTerminalStep.process(request)).thenReturn(WorkflowResult.CONTINUE);
         when(reserveTerminalStep.nextStep()).thenReturn(Optional.of(scheduleDeliveryStep));
 
-        when(scheduleDeliveryStep.supports(any())).thenReturn(true);
         when(scheduleDeliveryStep.process(request)).thenReturn(WorkflowResult.STOP);
 
         // when
