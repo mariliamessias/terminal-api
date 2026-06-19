@@ -1,6 +1,7 @@
 package com.rede.terminal_api.infraestructure.repository;
 
 import com.rede.terminal_api.infrastructure.repository.GetTerminalRequestByIdRepository;
+import com.rede.terminal_api.infrastructure.repository.TerminalRequestErrorJpaRepository;
 import com.rede.terminal_api.infrastructure.repository.SaveTerminalRequestRepository;
 import com.rede.terminal_api.infrastructure.repository.TerminalRequestJpaRepository;
 import com.rede.terminal_api.infrastructure.repository.entity.TerminalRequestEntity;
@@ -27,8 +28,12 @@ class TerminalRequestRepositoryIntegrationTest {
     @Autowired
     private TerminalRequestJpaRepository terminalRequestJpaRepository;
 
+    @Autowired
+    private TerminalRequestErrorJpaRepository terminalRequestErrorJpaRepository;
+
     @BeforeEach
     void setUp() {
+        terminalRequestErrorJpaRepository.deleteAll();
         terminalRequestJpaRepository.deleteAll();
     }
 

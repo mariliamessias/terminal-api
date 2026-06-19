@@ -1234,15 +1234,28 @@ Neste momento, o `eventId` é mantido apenas para rastreabilidade e correlação
 
 Quando a solicitação não é encontrada no fluxo assíncrono, o processamento não propaga exceção para o listener. O caso é apenas registrado em log e descartado.
 
+### Falhas técnicas e reprocessamento
+
+As falhas técnicas de integração passaram a ser separadas do status de negócio da `TerminalRequest`.
+
+Para isso, foi criada uma estrutura própria de erro técnico em `terminal_request_errors`, vinculada à request por foreign key. Essa tabela armazena o estado corrente da falha técnica, sem alterar o `status` funcional da solicitação.
+
+O objetivo dessa separação é:
+
+- não misturar erro técnico com estado de negócio;
+- preservar a informação necessária para reprocessamento futuro;
+- permitir evolução posterior para scheduler/reprocessador sem depender do evento interno em memória.
+
+Atualmente, quando ocorre `IntegrationUnavailableException` no processamento assíncrono:
+
+- o erro é salvo ou atualizado na tabela de erros;
+- o contador de tentativas é incrementado;
+- a solicitação principal permanece com seu último estado consistente.
+
+O fluxo atual não limpa automaticamente o erro em caso de sucesso posterior. Essa responsabilidade foi deixada para o futuro orquestrador de reprocessamento, que poderá decidir quando a pendência foi realmente resolvida.
+
 ### Contrato público da API
 
 Os campos `externalKey` e `version` permanecem internos e não são expostos nos response objects.
 
 Isso mantém a API focada no contrato funcional para o cliente, sem vazar detalhes internos de idempotência e controle de concorrência.
-
-## Melhorias futuras
-
-- Retry/Circuit breaker para integrações externas
-- Usar implementações reais (Mensageria com RabbitMQ ou Kafka/Banco relacional persistente)
-- Observabilidade com métricas e tracing
-- Fluxo de Reprocessamento em casos de Falha de Integração

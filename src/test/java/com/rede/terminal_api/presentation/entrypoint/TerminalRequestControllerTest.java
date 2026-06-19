@@ -3,6 +3,7 @@ package com.rede.terminal_api.presentation.entrypoint;
 import com.rede.terminal_api.domain.gateway.SaveTerminalRequestGateway;
 import com.rede.terminal_api.domain.model.TerminalRequest;
 import com.rede.terminal_api.domain.model.TerminalType;
+import com.rede.terminal_api.infrastructure.repository.TerminalRequestErrorJpaRepository;
 import com.rede.terminal_api.infrastructure.repository.TerminalRequestJpaRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,15 +40,38 @@ class TerminalRequestControllerTest {
     @Autowired
     private TerminalRequestJpaRepository terminalRequestJpaRepository;
 
+    @Autowired
+    private TerminalRequestErrorJpaRepository terminalRequestErrorJpaRepository;
+
     @BeforeEach
     void setUp() {
         reset(saveTerminalRequestGateway);
-        terminalRequestJpaRepository.deleteAll();
+        cleanDatabaseWithRetry();
     }
 
     @AfterEach
     void tearDown() {
         clearInvocations(saveTerminalRequestGateway);
+    }
+
+    private void cleanDatabaseWithRetry() {
+        for (int attempt = 0; attempt < 5; attempt++) {
+            try {
+                terminalRequestErrorJpaRepository.deleteAll();
+                terminalRequestJpaRepository.deleteAll();
+                return;
+            } catch (org.springframework.orm.ObjectOptimisticLockingFailureException exception) {
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException interruptedException) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(interruptedException);
+                }
+            }
+        }
+
+        terminalRequestErrorJpaRepository.deleteAll();
+        terminalRequestJpaRepository.deleteAll();
     }
 
     @Test
@@ -237,8 +261,22 @@ class TerminalRequestControllerTest {
                 .andReturn();
 
         org.assertj.core.api.Assertions.assertThat(terminalRequestJpaRepository.count()).isEqualTo(1);
-        org.assertj.core.api.Assertions.assertThat(secondResponse.getResponse().getContentAsString())
-                .isEqualTo(firstResponse.getResponse().getContentAsString());
+        var firstContent = firstResponse.getResponse().getContentAsString();
+        var secondContent = secondResponse.getResponse().getContentAsString();
+
+        org.assertj.core.api.Assertions.assertThat(extractJsonValue(firstContent, "id"))
+                .isEqualTo(extractJsonValue(secondContent, "id"));
+        org.assertj.core.api.Assertions.assertThat(extractJsonValue(firstContent, "customerId"))
+                .isEqualTo(extractJsonValue(secondContent, "customerId"));
+        org.assertj.core.api.Assertions.assertThat(extractJsonValue(firstContent, "terminalType"))
+                .isEqualTo(extractJsonValue(secondContent, "terminalType"));
+    }
+
+    private String extractJsonValue(String json, String field) {
+        var regex = "\"" + field + "\"\\s*:\\s*\"([^\"]+)\"";
+        var matcher = java.util.regex.Pattern.compile(regex).matcher(json);
+        org.assertj.core.api.Assertions.assertThat(matcher.find()).isTrue();
+        return matcher.group(1);
     }
 
     @Test

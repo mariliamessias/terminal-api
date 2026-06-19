@@ -18,7 +18,7 @@ public class TerminalRequestCreatedListener {
     @Async
     @EventListener
     public void on(TerminalRequestCreatedEvent event) {
-        log.info("Listener executado para eventId={}", event.eventId());
+        log.info("Listener executed for eventId={}", event.eventId());
         processTerminalRequestUseCase.execute(event.eventId(), event.terminalRequestId());
     }
 
